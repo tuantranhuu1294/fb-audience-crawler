@@ -1,7 +1,7 @@
 package com.selenium.scrape.gui;
 
 import com.selenium.scrape.executor.TakeSizeExecutor;
-import com.selenium.scrape.output.TextAreaOutputStream2;
+import com.selenium.scrape.output.TextAreaOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,20 +14,20 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintStream;
 
-public class TakeAudience {
+public class TakeAudiencePanel {
 
-    private static Logger LOG = LogManager.getLogger(TakeAudience.class);
+    private static Logger LOG = LogManager.getLogger(TakeAudiencePanel.class);
 
     private static JTextField textFileChoose;
     private static JTextField textOutFileChoose;
     private static JTextField textGeckoDriverFileChoose;
+    private static JTextField textConfigFileChoose;
     private static JTextField textUsername;
     private static JTextField textSleepTime;
     private static JTextField textImplicitlyWait;
     private static JPasswordField fieldPassword;
-    private static JTextArea console;
 
-    public TakeAudience() {
+    public TakeAudiencePanel() {
     }
 
     public JPanel buildTakeAudSize() {
@@ -40,8 +40,9 @@ public class TakeAudience {
         JLabel labelFileChoose = new JLabel("Dictionary file: ");
         JLabel labelOutputFileChoose = new JLabel("Output file: ");
         JLabel labelGeckoDriverFileChoose = new JLabel("Gecko driver file: ");
+        JLabel labelConfigFileChoose = new JLabel("Config file: ");
 
-        console = new JTextArea(10, 60);
+        JTextArea console = new JTextArea(10, 60);
         console.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         console.setBackground(Color.BLACK);
         console.setForeground(Color.GREEN);
@@ -53,7 +54,7 @@ public class TakeAudience {
         console.setWrapStyleWord(true);
 
         // Print output to console
-        PrintStream out = new PrintStream(new TextAreaOutputStream2(console));
+        PrintStream out = new PrintStream(new TextAreaOutputStream(console));
         //PrintStream out = new PrintStream(consoleOutputStream);
         System.setOut(out);
         System.setErr(out);
@@ -66,6 +67,7 @@ public class TakeAudience {
         textFileChoose = new JTextField(25);
         textOutFileChoose = new JTextField(25);
         textGeckoDriverFileChoose = new JTextField(25);
+        textConfigFileChoose = new JTextField(25);
         textUsername = new JTextField(30);
         fieldPassword = new JPasswordField(30);
         textSleepTime = new JTextField(5);
@@ -89,6 +91,13 @@ public class TakeAudience {
         btnGeckoDriverFileBrowse.addActionListener(e -> {
             // TODO Auto-generated method stub
             buttonActionPerformed(e, textGeckoDriverFileChoose, MainUI.MODE_OPEN);
+
+        });
+
+        JButton btnConfigFileBrowse = new JButton("Browse...");
+        btnConfigFileBrowse.addActionListener(e -> {
+            // TODO Auto-generated method stub
+            buttonActionPerformed(e, textConfigFileChoose, MainUI.MODE_OPEN);
 
         });
 
@@ -150,9 +159,20 @@ public class TakeAudience {
         constraints.gridx = 2;
         newPanel.add(btnGeckoDriverFileBrowse, constraints);
 
-        // Sleep time area
+        // Config file chooser area
         constraints.gridx = 0;
         constraints.gridy = 5;
+        newPanel.add(labelConfigFileChoose, constraints);
+
+        constraints.gridx = 1;
+        newPanel.add(textConfigFileChoose, constraints);
+
+        constraints.gridx = 2;
+        newPanel.add(btnConfigFileBrowse, constraints);
+
+        // Sleep time area
+        constraints.gridx = 0;
+        constraints.gridy = 6;
         newPanel.add(labelSleepTime, constraints);
 
         constraints.gridx = 1;
@@ -160,7 +180,7 @@ public class TakeAudience {
 
         // Sleep time area
         constraints.gridx = 0;
-        constraints.gridy = 6;
+        constraints.gridy = 7;
         newPanel.add(labelImplicitlyWait, constraints);
 
         constraints.gridx = 1;
@@ -168,13 +188,13 @@ public class TakeAudience {
 
         // Log console area
         constraints.gridx = 0;
-        constraints.gridy = 7;
+        constraints.gridy = 8;
         constraints.gridwidth = 4;
         newPanel.add(scroll, constraints);
 
         // Run button area
         constraints.gridx = 0;
-        constraints.gridy = 8;
+        constraints.gridy = 9;
         constraints.anchor = GridBagConstraints.CENTER;
         btnCrawlAudSize.setToolTipText("Take Audience");
         btnCrawlAudSize.addActionListener(takeAudienceSize());
@@ -206,18 +226,19 @@ public class TakeAudience {
     private ActionListener takeAudienceSize() {
         return e -> {
             // Set log console
-            LOG.info("start crawling ...");
+            LOG.info("System initializing ...");
 
             String userName = textUsername.getText();
             String password = String.valueOf(fieldPassword.getPassword());
             String dictFilePath = textFileChoose.getText();
             String outFilePath = textOutFileChoose.getText();
             String geckoDriverFilePath = textGeckoDriverFileChoose.getText();
+            String configFilePath = textConfigFileChoose.getText();
             String sleepTime = textSleepTime.getText();
             String implicitlyWait = textImplicitlyWait.getText();
 
             new Thread(() -> {
-                TakeSizeExecutor executor = new TakeSizeExecutor();
+                TakeSizeExecutor executor = new TakeSizeExecutor(configFilePath);
                 if (!StringUtils.isEmpty(sleepTime) && NumberUtils.isNumber(sleepTime))
                     executor.setSleepTime(Integer.parseInt(sleepTime) * 1000);
 

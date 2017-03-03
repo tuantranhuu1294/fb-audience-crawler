@@ -20,30 +20,15 @@ public class MainUI extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
-        JComponent component = buildPanel2();
+        JComponent component = buildPanel();
         // add the panel to this frame
         add(component);
         pack();
         setLocationRelativeTo(null);
     }
 
-    protected static JComponent buildPanel() {
-        // TODO Auto-generated method stub
-
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.putClientProperty("jgoodies.noContentBorder", Boolean.TRUE);
-
-        // tabbedPane.add("Crawl Audience", CrawlAudienceName.buildCrawlAud());
-        // tabbedPane.add("Take Audience Size",
-        // TakeAudienceSize.buildTakeAudSize());
-        tabbedPane.add("Crawl Audience", new TakeAudience().buildTakeAudSize());
-
-        return tabbedPane;
-
-    }
-
-    private static JComponent buildPanel2() {
-        return new TakeAudience().buildTakeAudSize();
+    private static JComponent buildPanel() {
+        return new TakeAudiencePanel().buildTakeAudSize();
     }
 
 }

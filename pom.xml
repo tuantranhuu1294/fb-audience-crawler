@@ -113,12 +113,6 @@
         </dependency>
 
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.38</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.jgoodies</groupId>
             <artifactId>jgoodies-forms</artifactId>
             <version>1.6.0</version>
@@ -136,6 +130,12 @@
             <version>2.7</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>1.10</version>
+        </dependency>
 
     </dependencies>
 

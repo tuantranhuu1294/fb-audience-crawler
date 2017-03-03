@@ -1,8 +1,11 @@
 package com.selenium.scrape.executor;
 
-import com.selenium.scrape.task.DetailedTargingActions;
+import com.selenium.scrape.task.DetailedTargetingActions;
 import com.selenium.scrape.task.GetAudience;
 import com.selenium.scrape.task.UserLogin;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +20,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,18 +30,21 @@ import java.util.concurrent.TimeUnit;
 public class TakeSizeExecutor {
 
     private static Logger LOG = LogManager.getLogger(TakeSizeExecutor.class);
-    public static final int DEFAULT_SLEEP_TIME = 40000;
-    public static final int DEFAULT_IMPLICITLY_WAIT_TIME = 10;
+    private static final int DEFAULT_SLEEP_TIME = 40000;
+    private static final int DEFAULT_IMPLICITLY_WAIT_TIME = 10;
 
     private int sleepTime;
     private int implicitlyWait;
+    private String configFile;
 
-    public TakeSizeExecutor() {
+    public TakeSizeExecutor(String configFile) {
+        this.configFile = configFile;
         sleepTime = DEFAULT_SLEEP_TIME;
         implicitlyWait = DEFAULT_IMPLICITLY_WAIT_TIME;
     }
 
-    public TakeSizeExecutor(int sleepTime, int implicitlyWait) {
+    public TakeSizeExecutor(String configFile, int sleepTime, int implicitlyWait) {
+        this.configFile = configFile;
         this.sleepTime = sleepTime;
         this.implicitlyWait = implicitlyWait;
     }
@@ -64,35 +72,40 @@ public class TakeSizeExecutor {
         } else if (StringUtils.isEmpty(outFilePath)) {
             LOG.error("Please choose output file.");
             System.out.println("Please choose output file.");
+        } else if (StringUtils.isEmpty(configFile)) {
+            LOG.error("Please choose config file.");
+            System.out.println("Please choose config file.");
         } else {
             try {
                 execute(userName, password, dictFilePath, outFilePath, geckoDriverFilePath);
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException | InterruptedException | ConfigurationException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.warn("Execution exception", e);
             }
         }
     }
 
     private void execute(String userName, String password, String dictFilePath, String outFilePath, String
-            geckoDriverFilePath)
-            throws IOException, InterruptedException {
+            geckoDriverFilePath) throws IOException, InterruptedException, ConfigurationException {
+
+        Configuration config = new PropertiesConfiguration(configFile);
+
         System.setProperty("webdriver.gecko.driver", geckoDriverFilePath);
         WebDriver driver = new FirefoxDriver();
         driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
 
-        UserLogin login = new UserLogin(driver, userName, password);
+        UserLogin login = new UserLogin(driver, config, userName, password);
         login.login();
         login.createCampain();
 
         LOG.info("Sleeping 30s for setting up detailed targeting components");
         Thread.sleep(30000);
 
-        DetailedTargingActions action = new DetailedTargingActions(driver);
+        DetailedTargetingActions action = new DetailedTargetingActions(driver, config);
 
         // Remove default element suggestion
-        WebElement targetArea = driver.findElement(By.xpath("//h4/div[contains(text(), 'Detailed targeting')]"));
+        WebElement targetArea = driver.findElement(By.xpath(config.getString("fb.xpath.target.targeting_detailed_area")));
         action.scrollTo(targetArea);
         Thread.sleep(2000);
 
@@ -116,30 +129,29 @@ public class TakeSizeExecutor {
         // Set implicitly wait time
         driver.manage().timeouts().implicitlyWait(implicitlyWait, TimeUnit.SECONDS);
 
-        LOG.info("Crawling is running");
+        LOG.info("Crawler started");
         long start = System.currentTimeMillis();
         int countLoop = 0;
 
-        GetAudience process = new GetAudience(outFilePath);
+        GetAudience process = new GetAudience(outFilePath, config);
         if (defaultPotentialReach > 0)
             process.setDefaultPotentialReach(defaultPotentialReach);
         if (defaultWorkJob != null)
             process.setDefaultWorkJob(defaultWorkJob);
 
-        BufferedReader reader = new BufferedReader(new FileReader(new File(dictFilePath)));
-        String line = reader.readLine();
-        while (line != null) {
+
+        // Execute select potential reach for all words in dictionary file
+        List<String> words = loadDictionary(dictFilePath);
+        for (String word : words) {
             if (countLoop > 10) {
                 countLoop = 0;
                 LOG.info("Sleeping " + sleepTime / 1000 + " seconds");
                 Thread.sleep(sleepTime);
             }
-            process.selectPotentialReach(driver, line);
+            process.selectPotentialReach(driver, word);
             countLoop++;
-            line = reader.readLine();
         }
 
-        reader.close();
         process.close();
         driver.close();
 
@@ -151,4 +163,17 @@ public class TakeSizeExecutor {
     }
 
 
+    private List<String> loadDictionary(String file) throws IOException {
+        LOG.info("Loading dictionary file ...");
+        List<String> words = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(new File(file)));
+        String word = reader.readLine();
+        while (word != null) {
+            words.add(word);
+            word = reader.readLine();
+        }
+        reader.close();
+
+        return words;
+    }
 }
