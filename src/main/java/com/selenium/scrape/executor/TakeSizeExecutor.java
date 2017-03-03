@@ -3,6 +3,7 @@ package com.selenium.scrape.executor;
 import com.selenium.scrape.task.DetailedTargetingActions;
 import com.selenium.scrape.task.GetAudience;
 import com.selenium.scrape.task.UserLogin;
+import com.selenium.scrape.util.ConfigUtils;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -105,7 +106,7 @@ public class TakeSizeExecutor {
         DetailedTargetingActions action = new DetailedTargetingActions(driver, config);
 
         // Remove default element suggestion
-        WebElement targetArea = driver.findElement(By.xpath(config.getString("fb.xpath.target.targeting_detailed_area")));
+        WebElement targetArea = driver.findElement(By.xpath(ConfigUtils.getString(config,"fb.xpath.target.targeting_detailed_area")));
         action.scrollTo(targetArea);
         Thread.sleep(2000);
 

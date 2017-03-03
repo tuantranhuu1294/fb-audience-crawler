@@ -1,5 +1,6 @@
 package com.selenium.scrape.task;
 
+import com.selenium.scrape.util.ConfigUtils;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -25,8 +26,8 @@ public class GetAudience {
     public GetAudience(Configuration config) throws IOException {
         defaultPotentialReach = 0;
         this.config = config;
-        writer = new BufferedWriter(new FileWriter(new File(config.getString("default.output.file"))));
-        LOG.info("Default output file created at " + config.getString("default.output.file"));
+        writer = new BufferedWriter(new FileWriter(new File(ConfigUtils.getString(config,"default.output.file"))));
+        LOG.info("Default output file created at " + ConfigUtils.getString(config,"default.output.file"));
     }
 
     public GetAudience(String outputFilePath, Configuration config) throws IOException {
